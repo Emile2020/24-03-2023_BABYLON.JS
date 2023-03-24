@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Babylon Template</title>
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+<script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+<script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+<script src="https://cdn.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+<script src="https://cdn.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.js"></script>
+<script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+<script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.js"></script>
+<script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+<script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.js"></script>
+<script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+<script src="https://cdn.babylonjs.com/gui/babylon.gui.js"></script>
+<script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+<script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.max.js"></script>
+<script src="https://cdn.babylonjs.com/viewer/babylon.viewer.js"></script>
+<script src="https://cdn.babylonjs.com/viewer/babylon.viewer.max.js"></script>
+</head>
+
+<body>
+
+    <canvas id="renderCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("renderCanvas"); // Get the canvas element
+        const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+        const createScene = function () {
+            // add an part with the camera 
+            const scene = new BABYLON.Scene(engine);
+            const camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, Math.PI / 2.5, 3, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            // add a light
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+            // add a sphere
+            const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2 }, scene);
+            sphere.position.y = 10;
+            sphere.position.x = 10;
+            //rotate the camera to the sphere
+            camera.setTarget(sphere.position);
+            // Allow the camera to move around the sphere and keep focus on it with no limits
+            camera.lowerRadiusLimit = null;
+            camera.upperRadiusLimit = null;
+            camera.wheelPrecision = 50;
+            // add a ground
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 6, height: 6 }, scene);
+            // add a box
+            const box = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene);
+            //place the box near the sphere
+            box.position.x = 10;
+            box.position.y = 10;
+            //Make the box move circles around the sphere smoothly forever without bombing this code with keyframes.push
+            const keyframes = [];
+            const animationBox = new BABYLON.Animation("myAnimation", "position", 30, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+            const keys = [];
+            const radius = 5;
+            const angle = 0;
+            const y = 10;
+            const x = 10;
+            const z = 0;
+            const speed = 0.5;
+            const frameRate = 1000;
+            const frames = 360;
+            for (let i = 0; i < frames; i++) {
+                keys.push({
+                    frame: i,
+                    value: new BABYLON.Vector3(Math.cos(angle + i * speed) * radius + x, y, Math.sin(angle + i * speed) * radius + z)
+                });
+            }
+            setInterval(() => {
+                //make the box rainbow neon and make the color change smoothly
+                box.material = new BABYLON.StandardMaterial("box", scene);
+                box.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+                //Make the box spin smoothly
+                box.rotation.y += 0.1;
+                box.rotation.x += 0.1;
+                box.rotation.z += 0.1;
+                //Make the sphere rainbow neon and make the color change smoothly
+                sphere.material = new BABYLON.StandardMaterial("sphere", scene);
+                sphere.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+                //make the ground rainbow neon and make the color change smoothly and spin smoothly and move circles around the sphere smoothly
+                ground.material = new BABYLON.StandardMaterial("ground", scene);
+                ground.material.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+                ground.rotation.y += 0.1;
+                ground.rotation.x += 0.1;
+                ground.rotation.z += 0.1;
+                ground.position.x = Math.cos(angle + i * speed) * radius + x;
+                ground.position.y = y;
+                ground.position.z = Math.sin(angle + i * speed) * radius + z;
+            }, 1);
+            animationBox.setKeys(keys);
+            box.animations.push(animationBox);
+            scene.beginAnimation(box, 0, frames, true);
+            //Add some 3D text thay says "Listen I can explain, I got bored", align it to thge top left corner and make it rainbow neon and make the color change smoothly
+            const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+            const text1 = new BABYLON.GUI.TextBlock();
+            text1.text = "Listen I can explain, I got bored";
+            text1.color = "white";
+            text1.fontSize = 24;
+            text1.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            text1.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+            advancedTexture.addControl(text1);
+            setInterval(() => {
+                text1.color = "white";
+            }, 1);
+            //make the sphere move with wasd, not arrow keys. Use q and e to move up and down. DO NOT BOMB MY CODE
+            const speedSphere = 0.1;
+            const speedSphereUp = 0.1;
+            const speedSphereDown = 0.1;
+            const speedSphereLeft = 0.1;
+            const speedSphereRight = 0.1;
+            const speedSphereForward = 0.1;
+            const speedSphereBackward = 0.1;
+            const movewithkeys = function () {
+                if (scene.actionManager) {
+                    scene.actionManager.dispose();
+                }
+                scene.actionManager = new BABYLON.ActionManager(scene);
+                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+                    switch (evt.sourceEvent.key) {
+                        case "w":
+                            sphere.position.z += speedSphere;
+                            break;
+                        case "s":
+                            sphere.position.z -= speedSphere;
+                            break;
+                        case "a":
+                            sphere.position.x -= speedSphere;
+                            break;
+                        case "d":
+                            sphere.position.x += speedSphere;
+                            break;
+                        case "q":
+                            sphere.position.y += speedSphere;
+                            break;
+                        case "e":
+                            sphere.position.y -= speedSphere;
+                            break;
+                    }
+                }));
+            };
+            movewithkeys();
+
+            return scene;
+        };
+        const scene = createScene(); //Call the createScene functionaew        
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+    </script>
+
+</body>
+
+</html>
